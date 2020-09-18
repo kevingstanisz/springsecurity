@@ -14,6 +14,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 @EnableWebSecurity
@@ -21,6 +24,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
+    private Object UserDetailsService;
 
     @Autowired
     public ApplicationSecurityConfig(PasswordEncoder passwordEncoder) {
@@ -29,6 +33,8 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
+
         http
                 .csrf().disable() // this is fine for now
 //                .csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -44,37 +50,48 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest()
                 .authenticated()
                 .and()
-                .httpBasic();
+                .formLogin()
+                .loginPage("/login").permitAll()
+                .defaultSuccessUrl("/courses", true)
+                .and()
+                .rememberMe()
+                .tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
+                .key("somethingverysecured")
+                .and()
+                .logout()
+                .logoutUrl("/logout")
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET")) // https://docs.spring.io/spring-security/site/docs/4.2.12.RELEASE/apidocs/org/springframework/security/config/annotation/web/configurers/LogoutConfigurer.html
+                .clearAuthentication(true)
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID", "remember-me")
+                .logoutSuccessUrl("/login");
     }
 
     @Override
     @Bean
-    public UserDetailsService userDetailsServiceBean() throws Exception {
-        UserDetails kevUser = User.builder()
+    protected UserDetailsService userDetailsService() {
+        UserDetails annaSmithUser = User.builder()
                 .username("kev")
                 .password(passwordEncoder.encode("password"))
-//                .roles(ApplicationUserRole.STUDENT.name()) //ROLE_STUDENT
                 .authorities(ApplicationUserRole.STUDENT.getGrantedAuthorities())
                 .build();
 
-        UserDetails kevAdmin = User.builder()
+        UserDetails lindaUser = User.builder()
                 .username("kevin")
                 .password(passwordEncoder.encode("password"))
-//                .roles(ApplicationUserRole.ADMIN.name())
                 .authorities(ApplicationUserRole.ADMIN.getGrantedAuthorities())
                 .build();
 
-        UserDetails kevTrain = User.builder()
+        UserDetails tomUser = User.builder()
                 .username("kevina")
                 .password(passwordEncoder.encode("password"))
- //               .roles(ApplicationUserRole.ADMINTRAIN.name())
                 .authorities(ApplicationUserRole.ADMINTRAIN.getGrantedAuthorities())
                 .build();
 
         return new InMemoryUserDetailsManager(
-                kevUser,
-                kevAdmin,
-                kevTrain
+                annaSmithUser,
+                lindaUser,
+                tomUser
         );
     }
 }
