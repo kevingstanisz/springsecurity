@@ -1,7 +1,7 @@
 # Spring Security 
 
 ## Spring Security | FULL COURSE (4:57:57)
-###### Amigoscode - https://www.youtube.com/watch?v=her_7pa0vrg&t=8s&ab_channel=Amigoscode
+###### Amigoscode - https://youtu.be/her_7pa0vrg
 
 In this Youtube tutorial by Amigoscode, we went over the value of Spring Security. Spring Security simplifies a lot of security concepts into an abstracted way and can use the API's to secure the application. 
 
